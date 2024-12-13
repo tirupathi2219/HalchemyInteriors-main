@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, useAnimation, useInView } from "framer-motion";
-import { useRef } from "react";
 
 const AchievementsSection = ({ workAchievements }) => {
   const ref = useRef(null);
@@ -9,15 +8,20 @@ const AchievementsSection = ({ workAchievements }) => {
 
   // State to hold counts for each achievement
   const [counts, setCounts] = useState(workAchievements.map(() => 0));
+  const countsRef = useRef(counts);
+
+  useEffect(() => {
+    countsRef.current = counts;
+  }, [counts]);
 
   useEffect(() => {
     if (isInView) {
       const duration = 1.5; // Duration of the counting animation
-      const newCounts = [...counts]; // Create a copy of the current counts
+      const newCounts = [...countsRef.current]; // Access counts via ref to avoid triggering re-renders
 
       workAchievements.forEach((item, index) => {
         const increment = Math.ceil(item.title / (duration * 60)); // Increment per frame (assuming 60 FPS)
-        let currentCount = 0;
+        let currentCount = countsRef.current[index] || 0;
 
         const countUp = () => {
           if (currentCount < item.title) {
@@ -33,7 +37,8 @@ const AchievementsSection = ({ workAchievements }) => {
         countUp();
       });
     }
-  }, [isInView, workAchievements]); 
+  }, [isInView, workAchievements]); // No dependency on `counts`
+
   useEffect(() => {
     if (isInView) {
       controls.start("visible");
